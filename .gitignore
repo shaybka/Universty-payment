@@ -1,0 +1,25 @@
+# Node modules
+node_modules/
+
+# Log files and folders
+*.log
+logs/
+**/LOG
+**/LOG.old
+
+# Runtime/session data (if not needed in version control)
+session/
+
+# Environment variables
+.env
+
+# Cache directories
+.wwebjs_cache/
+
+# Build output
+dist/
+build/
+
+# Operating System files
+.DS_Store
+Thumbs.db
