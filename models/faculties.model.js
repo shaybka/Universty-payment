@@ -12,6 +12,11 @@ const departmentSchema = new Schema({
     required: [true, "Semester fee is required"],
     min: [0, "Fee cannot be negative"],
   },
+  semesters: {
+    type: Number,
+    required: [true, "Number of semesters is required"],
+    min: [1, "At least one semester is required"],
+  }
 }, { _id: true });
 
 const facultySchema = new Schema(

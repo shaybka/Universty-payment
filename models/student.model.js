@@ -34,9 +34,17 @@ const studentSchema = new Schema(
       ref: "Faculty",
       required: [true, "Faculty is required"],
     },
-    verficationCode: {
+    classname:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Class",
+      required: [true, "Class is required"],
+    },verficationCode: {
       type: String,
      
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
     },
     codeExpiry: {
       type: Date,

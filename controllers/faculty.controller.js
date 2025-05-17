@@ -1,5 +1,6 @@
 import Faculty from "../models/faculties.model.js";
 
+//create faculty
 export const createFaculty = async (req, res) => {
   try {
     const { name } = req.body;
@@ -23,23 +24,28 @@ export const createFaculty = async (req, res) => {
   }
 };
 
+// Add a department to a faculty and semester fee
 export const addDepartmentToFaculty = async (req, res) => {
   try {
     const { facultyId } = req.params;
-    const { name, semesterFee } = req.body;
+    const { name, semesterFee, semesters } = req.body;
 
-    if (!name || semesterFee === undefined) {
+    if (!name || semesterFee === undefined || semesters === undefined) {
       return res
         .status(400)
-        .json({ message: "Department name and semester fee are required" });
+        .json({ message: "Department name, semester fee, and number of semesters are required" });
     }
 
     const faculty = await Faculty.findById(facultyId);
     if (!faculty) {
       return res.status(404).json({ message: "Faculty not found" });
     }
+    // Check if the department already exists
+    if (faculty.departments.some(dept => dept.name === name)) {
+      return res.status(400).json({ message: "Department already exists" }); 
+    }
 
-    const newDepartment = { name, semesterFee };
+    const newDepartment = { name, semesterFee, semesters };
     faculty.departments.push(newDepartment);
     await faculty.save();
 
@@ -56,6 +62,7 @@ export const addDepartmentToFaculty = async (req, res) => {
       .json({ message: "Internal server error", error: error.message });
   }
 };
+
 
 export const getAllFaculties = async (req, res) => {
   try {
@@ -102,5 +109,25 @@ export const deleteFaculty = async (req, res) => {
     res
       .status(500)
       .json({ message: "Internal server error", error: error.message });
+  }
+};
+
+export const getDepartmentsByFaculty = async (req, res) => {
+  try {
+    const { facultyId } = req.params; 
+    const faculty = await Faculty.findById(facultyId);
+
+    if (!faculty) {
+      return res.status(404).json({ message: "Faculty not found" });
+    }
+
+    if (faculty.departments.length === 0) {
+      return res.status(404).json({ message: "No departments found for this faculty" });
+    }
+
+    res.status(200).json(faculty.departments);
+  } catch (error) {
+    console.error("Error fetching departments by faculty:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };

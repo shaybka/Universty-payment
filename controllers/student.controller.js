@@ -4,10 +4,41 @@ import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/config.js";
 import whatsappClient from "../utils/whatsappClient.js";
 
+//  function to send WhatsApp messages
+const sendWhatsAppMessage = async (phoneNumber, message) => {
+  try {
+    const formattedPhone = phoneNumber.replace("+", "");
+
+    // Ensure the WhatsApp client is ready
+    if (!whatsappClient.info || !whatsappClient.info.wid) {
+      throw new Error("WhatsApp client is not ready");
+    }
+
+    await whatsappClient.sendMessage(`${formattedPhone}@c.us`, message);
+  } catch (error) {
+    console.error("Error sending WhatsApp message:", error.message);
+    throw new Error("Failed to send WhatsApp message");
+  }
+};
+
+//  function to handle errors
+const handleError = (res, error, message = "Internal server error") => {
+  console.error(message, error);
+  res.status(500).json({ message, error: error.message });
+};
+
+// Register a new student
 export const registerStudent = async (req, res) => {
   try {
-    const { _id, fullName, phoneNumber, gender, department, faculty } =
-      req.body;
+    const {
+      _id,
+      fullName,
+      phoneNumber,
+      classname,
+      gender,
+      department,
+      faculty,
+    } = req.body;
 
     // Validate required fields
     if (
@@ -16,78 +47,91 @@ export const registerStudent = async (req, res) => {
       !phoneNumber ||
       !gender ||
       !department ||
-      !faculty
+      !faculty ||
+      !classname
     ) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
+    // Create a new student
     const newStudent = new Student({
       _id,
       fullName,
       phoneNumber,
       gender,
       department,
+      classname,
       faculty,
+      verficationCode: generateVerficationCode(),
+      codeExpiry: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes expiry
     });
 
     const savedStudent = await newStudent.save();
+
+    // Send verification code via WhatsApp
+    await sendWhatsAppMessage(
+      phoneNumber,
+      `Your verification code is ${newStudent.verficationCode}. It expires in 10 minutes.`
+    );
+
     res.status(201).json({
-      message: "Student registered successfully",
+      message:
+        "Student registered successfully. Verification code sent via WhatsApp.",
       student: savedStudent,
     });
   } catch (error) {
-    console.error("Error registering student:", error);
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
+    handleError(res, error, "Error registering student");
   }
 };
 
+// Request a new verification code
 export const requestVerificationCode = async (req, res) => {
   try {
     const { phoneNumber } = req.body;
+
     if (!phoneNumber) {
       return res.status(400).json({ message: "Phone number is required" });
     }
+
     const student = await Student.findOne({ phoneNumber });
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
     }
-    const newCode = generateVerficationCode();
-    const codeExpiry = new Date(Date.now() + 10 * 60 * 1000);
-    student.verficationCode = newCode;
-    student.codeExpiry = codeExpiry;
+
+    // Generate and save new verification code
+    student.verficationCode = generateVerficationCode();
+    student.codeExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
     await student.save();
-    const formattedPhone = phoneNumber.replace("+", "");
-    await whatsappClient.sendMessage(
-      `${formattedPhone}@c.us`,
-      `Your verification code is ${newCode}. It expires in 10 minutes.`
+
+    // Send verification code via WhatsApp
+    await sendWhatsAppMessage(
+      phoneNumber,
+      `Your verification code is ${student.verficationCode}. It expires in 10 minutes.`
     );
+
     res.status(200).json({ message: "Verification code sent via WhatsApp" });
   } catch (error) {
-    console.error("Error sending verification code:", error);
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
+    handleError(res, error, "Error sending verification code");
   }
 };
 
+// Login a student
 export const loginStudent = async (req, res) => {
   try {
     const { phoneNumber, verificationCode } = req.body;
+
     if (!phoneNumber || !verificationCode) {
       return res
         .status(400)
         .json({ message: "Phone number and verification code are required" });
     }
 
-    // Find the student by phone number
     const student = await Student.findOne({ phoneNumber });
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
     }
 
-    // Validate verification code and check code expiry
+    // Validate verification code and expiry
     if (student.verficationCode !== verificationCode) {
       return res.status(400).json({ message: "Invalid verification code" });
     }
@@ -95,15 +139,13 @@ export const loginStudent = async (req, res) => {
       return res.status(400).json({ message: "Verification code expired" });
     }
 
-    // Generate JWT token once verification is successful
+    // Generate JWT token
     const token = jwt.sign({ studentId: student._id }, JWT_SECRET, {
       expiresIn: "7d",
     });
+
     res.status(200).json({ message: "Login successful", token });
   } catch (error) {
-    console.error("Error logging in student:", error);
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
+    handleError(res, error, "Error logging in student");
   }
 };

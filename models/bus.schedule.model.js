@@ -4,12 +4,16 @@ const { Schema } = mongoose;
 const busSchema = new Schema(
   {
     year: {
-      type: Number,
+      type: String,
       required: [true, "Year is required"],
     },
-    image: {
+    sem:{
+      type: Number,
+      required: [true, "Semester is required"],
+    },
+    Schedule: {
       type: String,
-      required: [true, "Image URL is required"],
+      required: [true, " Schedule URL is required"],
     },
   },
   { timestamps: true }

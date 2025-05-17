@@ -1,21 +1,6 @@
 import mongoose from "mongoose";
 const { Schema } = mongoose;
 
-const classSchema = new Schema(
-  {
-    name: {
-      type: String,
-      required: [true, "Class name is required"],
-      trim: true,
-    },
-    schedule: {
-      type: String,
-      required: [true, "Schedule is required"],
-    },
-  },
-  { _id: true }
-);
-
 const classesSchema = new Schema(
   {
     departmentId: {
@@ -23,12 +8,24 @@ const classesSchema = new Schema(
       ref: "Department",
       required: [true, "Department ID is required"],
     },
-    year: {
-      type: String,
-      required: [true, "Year is required"],
-      enum: ["freshman", "sophomore", "junior", "senior"],
+    semNum: {
+      type: Number,
+      required: [true, "semister Numberis required "],
     },
-    classes: [classSchema],
+    yearOfStudy: {
+      type: Number,
+      required: [true, "Academic year is required"],
+      min: [2000, "Enter a valid year"],
+    },
+    className: {
+      type: String,
+      required: [true, "Class name is required"],
+      trim: true,
+    },
+    classSchedule: {
+      type: String,
+      required: [true, "Class schedule is required"],
+    },
   },
   { timestamps: true }
 );

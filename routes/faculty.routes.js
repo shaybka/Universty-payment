@@ -5,6 +5,7 @@ import {
   getAllFaculties,
   getFacultyById,
   deleteFaculty,
+  getDepartmentsByFaculty,
 } from "../controllers/faculty.controller.js";
 
 const router = express.Router();
@@ -15,5 +16,6 @@ router.post("/:facultyId/departments", addDepartmentToFaculty);
 router.get("/", getAllFaculties); 
 router.get("/:id", getFacultyById); 
 router.delete("/:id", deleteFaculty); 
+router.get("/departments/:facultyId", getDepartmentsByFaculty);
 
 export default router;
