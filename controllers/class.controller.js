@@ -120,7 +120,7 @@ export const getAllClasses = async (req, res) => {
 // get specific departments classes
 
 export const getClassesByDepartment = async (req, res) => {
-  const { departmentId } = req.body;
+  const { departmentId } = req.params;
   try {
     const classes = await Class.find({ departmentId });
     if (classes.length === 0) {

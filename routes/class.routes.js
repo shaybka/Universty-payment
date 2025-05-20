@@ -9,7 +9,7 @@ classRouter.post("/registerclass",upload.single('classScheduleFile'),registerCla
 classRouter.put("/updateclass/:id",upload.single('classScheduleFile'),updateClass ); 
 classRouter.delete("/deleteClass/:id",deleteClass ); 
 classRouter.get("/getclasses",getAllClasses ); 
-classRouter.get("/departmentclasses",getClassesByDepartment ); 
+classRouter.get("/departmentclasses/:departmentId",getClassesByDepartment ); 
 
 
 

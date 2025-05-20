@@ -53,6 +53,14 @@ export const registerStudent = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
+    // Check if the student already exists
+       const existingStudent = await Student.findOne({ $or: [{ _id }, { phoneNumber }] });
+    if (existingStudent) {
+      return res.status(400).json({
+        message: "Student with this ID or phone number already exists",
+      });
+    }
+
     // Create a new student
     const newStudent = new Student({
       _id,
@@ -77,7 +85,7 @@ export const registerStudent = async (req, res) => {
     res.status(201).json({
       message:
         "Student registered successfully. Verification code sent via WhatsApp.",
-      student: savedStudent,
+       message:" verification code sent via WhatsApp verify your account",
     });
   } catch (error) {
     handleError(res, error, "Error registering student");
