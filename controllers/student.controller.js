@@ -147,13 +147,52 @@ export const loginStudent = async (req, res) => {
       return res.status(400).json({ message: "Verification code expired" });
     }
 
+    // Update student verification status
+    student.isVerified = true;
+    student.verficationCode = null; // Clear verification code
+    student.codeExpiry = null; // Clear code expiry
+    await student.save();
     // Generate JWT token
     const token = jwt.sign({ studentId: student._id }, JWT_SECRET, {
       expiresIn: "7d",
     });
 
-    res.status(200).json({ message: "Login successful", token });
+
+
+    const user ={
+      _id: student._id,
+      fullName: student.fullName,
+      phoneNumber: student.phoneNumber,
+      gender: student.gender,
+      isVerified: student.isVerified,
+      
+
+    }
+
+    res.status(200).json({ message: "Login successful", token ,user });
   } catch (error) {
     handleError(res, error, "Error logging in student");
+  }
+};
+
+
+// check auth
+
+export const checkAuth = async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const student = await Student.findById(decoded.studentId);
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    res.status(200).json({ message: "Authenticated", student });
+  } catch (error) {
+    handleError(res, error, "Error checking authentication");
   }
 };
