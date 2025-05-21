@@ -4,6 +4,6 @@ import upload from "../middleware/upload.js";
 
 const busScheduleRouter = express.Router();
 
-busScheduleRouter.post("/registerBusSchedule",upload.single('scheduleFile'),registerBusSchedule ); 
+busScheduleRouter.post("/registerBusSchedule", upload.single("scheduleFile"), registerBusSchedule);
 
 export default busScheduleRouter;
