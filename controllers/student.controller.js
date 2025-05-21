@@ -149,8 +149,8 @@ export const loginStudent = async (req, res) => {
 
     // Update student verification status
     student.isVerified = true;
-    student.verficationCode = null; // Clear verification code
-    student.codeExpiry = null; // Clear code expiry
+    student.verficationCode = null; 
+    student.codeExpiry = null; 
     await student.save();
     // Generate JWT token
     const token = jwt.sign({ studentId: student._id }, JWT_SECRET, {
@@ -175,24 +175,36 @@ export const loginStudent = async (req, res) => {
   }
 };
 
-
-// check auth
-
 export const checkAuth = async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) {
-      return res.status(401).json({ message: "Unauthorized" });
+    // Ensure the token contains the studentId
+    if (!req.user || !req.user.studentId) {
+      return res.status(401).json({ success: false, message: "Unauthorized access" });
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const student = await Student.findById(decoded.studentId);
+    // Find the student in the database using the studentId from the token
+    const student = await Student.findById(req.user.studentId).select("-password");
     if (!student) {
-      return res.status(404).json({ message: "Student not found" });
+      return res.status(404).json({ success: false, message: "Student not found" });
     }
 
-    res.status(200).json({ message: "Authenticated", student });
+    // Create a user object with the necessary fields
+    const user = {
+      _id: student._id,
+      fullName: student.fullName,
+      phoneNumber: student.phoneNumber,
+      gender: student.gender,
+      isVerified: student.isVerified,
+      classname: student.classname,
+    };
+
+    // Respond with user details
+    res.status(200).json({
+      success: true,
+      user,
+    });
   } catch (error) {
-    handleError(res, error, "Error checking authentication");
+    console.error("Error in checkAuth:", error);
+    res.status(500).json({ success: false, message: "Internal server error", error: error.message });
   }
 };

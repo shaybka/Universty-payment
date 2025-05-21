@@ -5,21 +5,24 @@ const feeSchema = new Schema(
   {
     type: {
       type: String,
-      required: [true, "Fee type is required"],
-      trim: true,
+      required: true,
+      enum: ["english", "semester", "graduation"], 
     },
     amount: {
       type: Number,
-      required: [true, "Fee amount is required"],
-      min: [0, "Fee amount cannot be negative"],
+      required: true,
+      min: 0,
     },
     isPaid: {
       type: Boolean,
-      default: false, 
-      
+      default: false,
+    },
+    semesterNumber: {
+      type: Number,
+      min: 1,    
     },
   },
-  { _id: false } 
+  { _id: false }
 );
 
 const paymentSchema = new Schema(
@@ -33,15 +36,10 @@ const paymentSchema = new Schema(
       required: [true, "Student full name is required"],
       trim: true,
     },
-    departmentName: {
-      type: String,
-      required: [true, "Department name is required"],
-      trim: true,
-    },
-    year: {
-      type: String,
-      required: [true, "Year is required"],
-      enum: ["freshman", "sophomore", "junior", "senior"], 
+    department: {
+      type: Schema.Types.ObjectId,
+      required: [true, "Department is required"],
+      ref: "Department",
     },
     fees: [feeSchema], 
   },

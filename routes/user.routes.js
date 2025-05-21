@@ -1,5 +1,6 @@
 import express from "express";
-import { loginStudent, registerStudent, requestVerificationCode } from "../controllers/student.controller.js";
+import { checkAuth, loginStudent, registerStudent, requestVerificationCode } from "../controllers/student.controller.js";
+import { authenticateToken } from "../middleware/verify.js";
 
 const userrouter = express.Router();
 
@@ -7,6 +8,7 @@ const userrouter = express.Router();
 userrouter.post("/", registerStudent); 
 userrouter.post("/request-verification-code", requestVerificationCode); 
 userrouter.post("/login", loginStudent); 
+userrouter.get("/check-auth",authenticateToken,checkAuth)
 
 
 export default userrouter;
