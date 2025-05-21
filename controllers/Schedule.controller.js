@@ -20,7 +20,9 @@ export const registerBusSchedule = async (req, res) => {
     }
 
     // Upload schedule file to Cloudinary
-    const encodedFile = `data:${scheduleFile.mimetype};base64,${scheduleFile.buffer.toString("base64")}`;
+    const encodedFile = `data:${
+      scheduleFile.mimetype
+    };base64,${scheduleFile.buffer.toString("base64")}`;
     const uploadResponse = await cloudinary.uploader.upload(encodedFile, {
       folder: "bus-schedules",
     });
@@ -53,6 +55,74 @@ export const registerBusSchedule = async (req, res) => {
     });
   } catch (error) {
     console.error("Error registering bus schedule:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
+};
+
+// Get bus Schedulle
+export const getBusSchedule = async (req, res) => {
+  try {
+    // Find all active bus schedules
+    const busSchedules = await Bus.find({ isActive: true });
+
+    // Check if no active schedules are found
+    if (busSchedules.length === 0) {
+      a;
+      return res.status(404).json({
+        message: "No active bus schedules found",
+      });
+    }
+
+    // Extract the schedule URLs
+    const schedules = busSchedules.map((schedule) => ({
+      sem: schedule.sem,
+      year: schedule.year,
+      scheduleUrl: schedule.Schedule,
+    }));
+
+    res.status(200).json({
+      message: "Bus schedules retrieved successfully",
+      schedules,
+    });
+  } catch (error) {
+    console.error("Error retrieving bus schedules:", error);
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
+};
+
+// depreciate previous bus schedule
+
+export const depreciateBusSchedule = async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Find the bus schedule by ID
+    const busSchedule = await Bus.findById(id);
+    if (!busSchedule) {
+      return res.status(404).json({
+        message: "Bus schedule not found",
+      });
+    }
+    // Check if the schedule is already inactive
+    if (!busSchedule.isActive) {
+      return res.status(400).json({
+        message: "Bus schedule is already inactive",
+      });
+    }
+    // Set the schedule to inactive
+    busSchedule.isActive = false;
+    const updatedSchedule = await busSchedule.save();
+    res.status(200).json({
+      message: "Bus schedule deprecated successfully",
+      schedule: updatedSchedule,
+    });
+  } catch (error) {
+    console.error("Error retrieving bus schedule:", error);
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };

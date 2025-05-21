@@ -15,6 +15,10 @@ const busSchema = new Schema(
       type: String,
       required: [true, " Schedule URL is required"],
     },
+    isActive:{
+      type: Boolean,
+      default: true,
+    }
   },
   { timestamps: true }
 );
