@@ -1,23 +1,36 @@
+import mongoose from "mongoose";
 import Class from "../models/classes.model.js";
-import cloudinary from "../config/cloudinary.js"; 
+import cloudinary from "../config/cloudinary.js";
 
 // Register a single class
 export const registerClass = async (req, res) => {
   try {
     const { departmentId, semNum, yearOfStudy, className } = req.body;
-    const classScheduleFile = req.file; 
+    const classScheduleFile = req.file;
 
     // Validate required fields
-    if (!departmentId || !semNum || !yearOfStudy || !className || !classScheduleFile) {
+    if (
+      !departmentId ||
+      !semNum ||
+      !yearOfStudy ||
+      !className ||
+      !classScheduleFile
+    ) {
       return res.status(400).json({
-        message: "Department ID, semester number, year of study, class name, and class schedule file are required",
+        message:
+          "Department ID, semester number, year of study, class name, and class schedule file are required",
       });
     }
 
     // Upload class schedule file to Cloudinary
     let classScheduleUrl = "";
     if (classScheduleFile) {
-      const encodedFile = `data:${classScheduleFile.mimetype};base64,${classScheduleFile.buffer.toString("base64")}`;
+      if (classScheduleFile.mimetype !== "application/pdf") {
+        return res.status(400).json({ message: "Only PDF files are allowed" });
+      }
+      const encodedFile = `data:${
+        classScheduleFile.mimetype
+      };base64,${classScheduleFile.buffer.toString("base64")}`;
       const uploadResponse = await cloudinary.uploader.upload(encodedFile, {
         folder: "class-schedules",
       });
@@ -30,7 +43,7 @@ export const registerClass = async (req, res) => {
       semNum,
       yearOfStudy,
       className,
-      classSchedule: classScheduleUrl, 
+      classSchedule: classScheduleUrl,
     });
 
     const savedClass = await newClass.save();
@@ -41,16 +54,18 @@ export const registerClass = async (req, res) => {
     });
   } catch (error) {
     console.error("Error registering class:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };
 
 // update a class
 export const updateClass = async (req, res) => {
   try {
-    const { id } = req.params; 
+    const { id } = req.params;
     const { departmentId, semNum, yearOfStudy, className } = req.body;
-    const classScheduleFile = req.file; 
+    const classScheduleFile = req.file;
 
     // Find the class by ID
     const existingClass = await Class.findById(id);
@@ -59,9 +74,14 @@ export const updateClass = async (req, res) => {
     }
 
     // Upload new class schedule file to Cloudinary if provided
-    let classScheduleUrl = existingClass.classSchedule; 
+    let classScheduleUrl = existingClass.classSchedule;
     if (classScheduleFile) {
-      const encodedFile = `data:${classScheduleFile.mimetype};base64,${classScheduleFile.buffer.toString("base64")}`;
+      if (classScheduleFile.mimetype !== "application/pdf") {
+        return res.status(400).json({ message: "Only PDF files are allowed" });
+      }
+      const encodedFile = `data:${
+        classScheduleFile.mimetype
+      };base64,${classScheduleFile.buffer.toString("base64")}`;
       const uploadResponse = await cloudinary.uploader.upload(encodedFile, {
         folder: "class-schedules",
       });
@@ -83,37 +103,42 @@ export const updateClass = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating class:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };
 
 // delete a class
 
 export const deleteClass = async (req, res) => {
-    try {
-        const { id } = req.params; 
-        // Find and delete the class by ID
-        const deletedClass = await Class.findByIdAndDelete(id);
-        if (!deletedClass) {
-        return res.status(404).json({ message: "Class not found" });
-        }
-    
-        res.status(200).json({ message: "Class deleted successfully" });
-    } catch (error) {
-        console.error("Error deleting class:", error);
-        res.status(500).json({ message: "Internal server error", error: error.message });
+  try {
+    const { id } = req.params;
+    // Find and delete the class by ID
+    const deletedClass = await Class.findByIdAndDelete(id);
+    if (!deletedClass) {
+      return res.status(404).json({ message: "Class not found" });
     }
-}
 
+    res.status(200).json({ message: "Class deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting class:", error);
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
+};
 
 // Get all classes
 export const getAllClasses = async (req, res) => {
   try {
-    const classes = await Class.find()
+    const classes = await Class.find();
     res.status(200).json(classes);
   } catch (error) {
     console.error("Error fetching classes:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };
 
@@ -124,11 +149,41 @@ export const getClassesByDepartment = async (req, res) => {
   try {
     const classes = await Class.find({ departmentId });
     if (classes.length === 0) {
-      return res.status(404).json({ message: "No classes found for this department" });
+      return res
+        .status(404)
+        .json({ message: "No classes found for this department" });
     }
     res.status(200).json(classes);
   } catch (error) {
     console.error("Error fetching classes by department:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
-}
+};
+export const getMyClassSchedule = async (req, res) => {
+  try {
+    const { classId } = req.params;
+
+    // Validate classId
+    if (!mongoose.Types.ObjectId.isValid(classId)) {
+      return res.status(400).json({ message: "Invalid class ID" });
+    }
+
+    const classSchedule = await Class.findById(classId);
+    if (!classSchedule) {
+      return res.status(404).json({ message: "Class schedule not found" });
+    }
+
+    const classScheduleUrl = classSchedule.classSchedule;
+
+    res
+      .status(200)
+      .json({ message: "Class schedule fetched", classScheduleUrl });
+  } catch (error) {
+    console.error("Error fetching class schedule:", error);
+    res
+      .status(500)
+      .json({ message: "failed to fetch class", error: error.message });
+  }
+};

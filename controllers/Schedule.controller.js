@@ -5,8 +5,8 @@ import Bus from "../models/bus.schedule.model.js";
 export const registerBusSchedule = async (req, res) => {
   try {
     const { sem, year } = req.body;
-    const scheduleFile = req.file; 
-    console.log("Received file:", scheduleFile);
+    const scheduleFile = req.file;
+
     // Validate required fields
     if (!sem || !year || !scheduleFile) {
       return res.status(400).json({
@@ -14,21 +14,35 @@ export const registerBusSchedule = async (req, res) => {
       });
     }
 
+    // Validate file type
+    if (scheduleFile.mimetype !== "application/pdf") {
+      return res.status(400).json({ message: "Only PDF files are allowed" });
+    }
+
     // Upload schedule file to Cloudinary
-    let scheduleUrl = "";
-    if (scheduleFile) {
-      const encodedFile = `data:${scheduleFile.mimetype};base64,${scheduleFile.buffer.toString("base64")}`;
-      const uploadResponse = await cloudinary.uploader.upload(encodedFile, {
-        folder: "bus-schedules",
+    const encodedFile = `data:${scheduleFile.mimetype};base64,${scheduleFile.buffer.toString("base64")}`;
+    const uploadResponse = await cloudinary.uploader.upload(encodedFile, {
+      folder: "bus-schedules",
+    });
+    const scheduleUrl = uploadResponse.secure_url;
+
+    // Check if a schedule already exists for the given semester and year
+    const existingSchedule = await Bus.findOne({ sem, year });
+    if (existingSchedule) {
+      // Update the existing schedule
+      existingSchedule.Schedule = scheduleUrl;
+      const updatedSchedule = await existingSchedule.save();
+      return res.status(200).json({
+        message: "Bus schedule updated successfully",
+        schedule: updatedSchedule,
       });
-      scheduleUrl = uploadResponse.secure_url;
     }
 
     // Create a new bus schedule
     const newBusSchedule = new Bus({
-      sem: sem,
-      year: year,
-      Schedule: scheduleUrl, 
+      sem,
+      year,
+      Schedule: scheduleUrl,
     });
 
     const savedBusSchedule = await newBusSchedule.save();
