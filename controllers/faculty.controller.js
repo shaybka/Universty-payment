@@ -132,3 +132,34 @@ export const getDepartmentsByFaculty = async (req, res) => {
   }
 };
 
+
+
+//get department semester fee
+
+export const getDepartmentSemesterFee = async (req, res) => {
+  try {
+    const { facultyId, departmentId } = req.params;
+    const faculty = await Faculty.findById(facultyId);
+    if (!faculty) {
+      return res.status(404).json({ message: "Faculty not found" });
+    }
+    const department = faculty.departments.id(departmentId);
+    if (!department) {
+      return res.status(404).json({ message: "Department not found" });
+    }
+    if (department.semesterFee === undefined) {
+      return res.status(404).json({ message: "Semester fee not found" });
+    }
+    const response = {
+      value: department.semesterFee,
+      type: "semesterFee",
+    };
+
+    res.status(200).json({ message: "Department fee fetched successfully", response });
+
+  }
+  catch(error) {
+    console.error("Error fetching department semester fee:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+}

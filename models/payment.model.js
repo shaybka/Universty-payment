@@ -6,7 +6,7 @@ const feeSchema = new Schema(
     type: {
       type: String,
       required: true,
-      enum: ["english", "semester", "graduation"], 
+      enum: ["english", "semesterFee", "graduation"], 
     },
     amount: {
       type: Number,
@@ -19,7 +19,17 @@ const feeSchema = new Schema(
     },
     semesterNumber: {
       type: Number,
-      min: 1,    
+      min: 1,
+      validate: {
+        validator: function (value) {
+          // Check for semesterFee type
+          if (this.type === "semesterFee" && (value === undefined || value === null)) {
+            return false;
+          }
+          return true;
+        },
+        message: "Semester number is required for semester fees",
+      },
     },
   },
   { _id: false }
@@ -41,7 +51,7 @@ const paymentSchema = new Schema(
       required: [true, "Department is required"],
       ref: "Department",
     },
-    fees: [feeSchema], 
+    fees: [feeSchema],
   },
   { timestamps: true }
 );
