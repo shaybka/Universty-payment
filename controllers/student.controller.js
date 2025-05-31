@@ -165,8 +165,7 @@ export const loginStudent = async (req, res) => {
       phoneNumber: student.phoneNumber,
       gender: student.gender,
       isVerified: student.isVerified,
-      
-
+      classname: student.classname,
     }
 
     res.status(200).json({ message: "Login successful", token ,user });

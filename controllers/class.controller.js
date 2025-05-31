@@ -33,6 +33,7 @@ export const registerClass = async (req, res) => {
       };base64,${classScheduleFile.buffer.toString("base64")}`;
       const uploadResponse = await cloudinary.uploader.upload(encodedFile, {
         folder: "class-schedules",
+        resource_type: "raw",
       });
       classScheduleUrl = uploadResponse.secure_url;
     }
@@ -76,14 +77,13 @@ export const updateClass = async (req, res) => {
     // Upload new class schedule file to Cloudinary if provided
     let classScheduleUrl = existingClass.classSchedule;
     if (classScheduleFile) {
-      if (classScheduleFile.mimetype !== "application/pdf") {
-        return res.status(400).json({ message: "Only PDF files are allowed" });
-      }
+    
       const encodedFile = `data:${
         classScheduleFile.mimetype
       };base64,${classScheduleFile.buffer.toString("base64")}`;
       const uploadResponse = await cloudinary.uploader.upload(encodedFile, {
         folder: "class-schedules",
+        
       });
       classScheduleUrl = uploadResponse.secure_url;
     }
