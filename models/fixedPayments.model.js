@@ -4,7 +4,7 @@ const fixedPaymentsSchema = new mongoose.Schema({
   typeOfPayment: {
     type: String,
     required: true,
-    enum: ["englishFee", "graduationFee"],
+    enum: ["englishFee", "semesterFee", "graduationFee","CommunityFee"],
   },
   amount: {
     type: Number,
