@@ -166,7 +166,10 @@ export const loginStudent = async (req, res) => {
       gender: student.gender,
       isVerified: student.isVerified,
       classname: student.classname,
+<<<<<<< HEAD
 
+=======
+>>>>>>> b2222b2b94375489d231174c92dbdb321a7fbe86
     }
 
     res.status(200).json({ message: "Login successful", token ,user });

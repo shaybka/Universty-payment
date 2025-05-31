@@ -14,10 +14,10 @@ export const registerBusSchedule = async (req, res) => {
       });
     }
 
-    // Validate file type
-    if (scheduleFile.mimetype !== "application/pdf") {
-      return res.status(400).json({ message: "Only PDF files are allowed" });
-    }
+    // // Validate file type
+    // if (scheduleFile.mimetype !== "application/pdf") {
+    //   return res.status(400).json({ message: "Only PDF files are allowed" });
+    // }
 
     // Upload schedule file to Cloudinary
     const encodedFile = `data:${
@@ -25,6 +25,7 @@ export const registerBusSchedule = async (req, res) => {
     };base64,${scheduleFile.buffer.toString("base64")}`;
     const uploadResponse = await cloudinary.uploader.upload(encodedFile, {
       folder: "bus-schedules",
+    
     });
     const scheduleUrl = uploadResponse.secure_url;
 
